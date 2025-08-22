@@ -1,0 +1,144 @@
+<!-- 按键横纵均等比分配 -->
+<template>
+  <div class="container" onswipe="touchMove">
+      <div class="resultBox">
+        <text class="resultShow result-text">{{resultShow}}</text>
+      </div>
+      <div class="keyBoardBox">
+        <text class="inputCommon input1" onclick="ac()">AC</text>
+        <text class="inputCommon input1" onclick="back()">←</text>
+        <text class="inputCommon input1" onclick="valueinput('^')">^</text>
+        <text class="inputCommon input1" onclick="valueinput(keyBoardNum[15])">{{keyBoardNum[15]}}</text>
+      </div>
+
+      <div class="keyBoardBox">
+        <text class="inputCommon"onclick="valueinput('X')" >X</text>
+        <text class="inputCommon"onclick="valueinput('pi')" >π</text>
+        <text class="inputCommon input1" onclick="valueinput('(')">(</text>
+        <text class="inputCommon input1" onclick="valueinput(')')">)</text>
+      </div>
+      <div class="keyBoardBox">
+        <text class="inputCommon" onclick="valueinput('e')">e</text>
+        <text class="inputCommon input1" onclick="valueinput('ln')">ln</text>
+        <text class="inputCommon input1" onclick="valueinput('sin')">sin</text>
+        <text class="inputCommon input1" onclick="valueinput('cos')">cos</text>
+      </div>
+
+      <div class="keyBoardBox">
+        <text class="inputCommon" onclick="valueinput(keyBoardNum[1])">{{keyBoardNum[1]}}</text>
+        <text class="inputCommon" onclick="valueinput(keyBoardNum[2])">{{keyBoardNum[2]}}</text>
+        <text class="inputCommon"onclick="valueinput(keyBoardNum[3])" >{{keyBoardNum[3]}}</text>
+        <text class="inputCommon input1" onclick="valueinput(keyBoardNum[10])">{{keyBoardNum[10]}}</text>
+      </div>
+      <div class="keyBoardBox">
+        <text class="inputCommon" onclick="valueinput(keyBoardNum[6])">{{keyBoardNum[6]}}</text>
+        <text class="inputCommon" onclick="valueinput(keyBoardNum[7])">{{keyBoardNum[7]}}</text>
+        <text class="inputCommon" onclick="valueinput(keyBoardNum[8])">{{keyBoardNum[8]}}</text>
+        <text class="inputCommon input1"onclick="valueinput(keyBoardNum[14])" >{{keyBoardNum[14]}}</text>
+      </div>
+      <div class="keyBoardBox">
+        <text class="inputCommon" onclick="valueinput(keyBoardNum[11])">{{keyBoardNum[11]}}</text>
+        <text class="inputCommon" onclick="valueinput(keyBoardNum[12])">{{keyBoardNum[12]}}</text>
+        <text class="inputCommon" onclick="valueinput(keyBoardNum[13])">{{keyBoardNum[13]}}</text>
+        <text  class="inputCommon input1" onclick="valueinput(keyBoardNum[9])">{{keyBoardNum[9]}}</text>
+      </div>
+      <div class="keyBoardBox">
+        <input onclick="exit" class="inputCommon input1" value="退出"></input>
+        <text class="inputCommon" onclick="valueinput(keyBoardNum[16])">{{keyBoardNum[16]}}</text>
+        <text class="inputCommon" onclick="valueinput(keyBoardNum[17])">{{keyBoardNum[17]}}</text>
+        <text class="inputCommon input1" onclick="valueinput(keyBoardNum[18])">{{keyBoardNum[18]}}</text>
+      </div>
+    </div>
+  
+</template>
+
+<script>
+import app from '@system.app';
+import router from '@system.router';
+const MinusIcon = '+/-';
+const DelIcon = ' ';
+
+export default {
+
+  data: {
+    resultShow: '',
+    keyBoardNum: ['C', '7', '8', '9', MinusIcon, DelIcon, '4', '5', '6', '+', '*', '1', '2', '3', '-', '/', '0', '.', ':', '%'],
+    commonColorList: ['#F53333', '#505050', '#505050', '#505050', '#505050', '#FFA626', '#505050', '#505050', '#505050', '#FFA626', '#FFA626', '#505050', '#505050', '#505050', '#FFA626', '#FFA626', '#505050', '#505050', '#FFA626'],
+    clickColorList: [],
+    signColorList: ['#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF']
+  },
+
+  onInit() {
+    const that = this
+    this.clickColorList = this.commonColorList.slice();
+  },
+  touchMove(eve){
+    console.info(eve)
+    if (eve.direction === 'left') {
+      // console.log(router.getPages())
+        router.push({
+          uri: '/pages/caculate',
+          params:{
+            'expression':this.resultShow
+          }
+        })
+      }
+    else if(eve.direction==='right'){
+      app.terminate();
+    }
+  },
+  valueinput(char_input){
+    console.log(char_input)
+    this.resultShow=this.resultShow+char_input;
+  },
+  back(){
+        // 检查最后2个字符是否是'ln'
+    const lastTwo = this.resultShow.slice(-2).toLowerCase();
+    const isLn = lastTwo === 'ln' || lastTwo === 'pi' ;
+    
+    // 检查最后3个字符是否是'cos'或'sin'
+    const lastThree = this.resultShow.slice(-3).toLowerCase();
+    const isCosOrSin = lastThree === 'cos' || lastThree === 'sin';
+    
+    if (isLn && this.resultShow.length >= 2) {
+        // 删除整个'ln'（2个字符）
+        this.resultShow = this.resultShow.slice(0, -2);
+    } else if (isCosOrSin && this.resultShow.length >= 3) {
+        // 删除整个'cos'或'sin'（3个字符）
+        this.resultShow = this.resultShow.slice(0, -3);
+    } else {
+        // 删除单个字符
+        this.resultShow = this.resultShow.slice(0, -1);
+    }
+  },
+  ac(){
+    this.resultShow=""
+  },
+
+  exit() {
+    app.terminate();
+  },
+
+};
+</script>
+
+
+<style>
+@import "./circle.css" screen and (shape: circle);
+@import "./rect.css" screen and (shape: rect);
+@import "./pillShaped.css" screen and (shape: pill-shaped);
+.container {
+  width: 100%;
+  height: 100%;
+  flex-direction: column;
+  align-items: center;
+}
+
+.resultShow {
+  color: rgb(254, 243, 232);
+  font-size: 35px;
+  text-align: right;
+  left: -20px;
+}
+
+</style>

@@ -1,0 +1,100 @@
+<import name="index" src="../index/index"></import>
+<template>
+    <div class="container" onswipe="toHomePage">
+      <div class="keyBoardBox">
+    <text class='inputCommon' @click="toline">画图 </text>
+  </div>
+     <div class="keyBoardBox">
+    <text class='inputCommon' @click="getMin">最小值 </text>
+     </div>
+     <div>
+      <text style="font-size:60px">{{res}} </text>
+     </div>
+    
+
+  </div>
+
+
+</template>
+
+<script>
+import router from '@system.router'
+import {constructExpression,makeFunction,newtonMethod} from  "../../common/process.js"
+export default {
+
+  data:{
+    res:"",
+    fn:NaN
+  },
+  // ...
+  toline(){
+    router.push({
+          uri: '/pages/line',
+          params:{
+            'expression':this.expression
+          }
+    })
+  },
+  toHomePage(eve) {
+    console.log(eve)
+    if (eve.direction === 'left' ||eve.direction === 'right'  )  {
+      router.back()
+    }
+  },
+  getMin(){
+    let exp=String(this.expression)
+    const len=exp.split(":").length
+   
+    let x0=0.001
+    if(len==2){
+      x0=parseFloat(exp.split(":")[1])
+    }
+    else if(len==1){
+      x0=0.001
+    }
+    exp=exp.split(":")[0]
+    // console.info(this.expression)
+    var expr= constructExpression(exp)
+    // this.fn= makeFunction(expr)
+    console.info(exp,expr,x0)
+  
+    var res= newtonMethod(expr,x0)
+
+    console.info(res)
+    this.res="最小值x："+Math.round(res.x * 1000) / 1000+"\n 函数值："+Math.round(res.fx * 1000) / 1000
+    
+  },
+
+}
+
+
+
+</script>
+
+<style>
+@import "../index/circle.css" screen and (shape: circle);
+@import "../index/rect.css" screen and (shape: rect);
+@import "../index/pillShaped.css" screen and (shape: pill-shaped);
+.container {
+  width: 100%;
+  height: 100%;
+  display: flex;              /* 开启 flex 布局 */
+  flex-direction: column;     /* 垂直排列 */
+  justify-content: center;    /* 垂直居中 */
+  align-items: center;        /* 水平居中 */
+}
+
+.inputCommon {
+  width: 100%;
+  height: 100%;
+  margin-left: 3px;
+  margin-right: 3px;
+  margin-bottom: 0px;
+  background-color: #3d3d3d;
+  color: #ffffff;
+  border-radius: 20px;
+  text-align: center;
+}
+
+
+</style>

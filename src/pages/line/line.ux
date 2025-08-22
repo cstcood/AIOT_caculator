@@ -1,0 +1,301 @@
+<template>
+    <div class="blood-sugar-page" @swipe="back">
+      <text class="title"></text>
+      <stack class="stack-wrap">
+        <div class="background-wrap">
+          <div class="line-item" for="{{ valueYs }}">
+            <text class="line"></text>
+            <text class="line-num">{{ $item }}</text>
+          </div>
+          <text class="line-bottom"></text>
+        </div>
+        <div class="top-wrap">
+          <div class="chart-wrap">
+            <chart
+              class="chart"
+              type="line"
+              id="chart"
+              options="{{ lineOpts }}"
+              datasets="{{ lineData }}"
+            ></chart>
+          </div>
+          <div class="time-wrap">
+            <text class="times" for="times">{{ $item }}</text>
+          </div>
+        </div>
+      </stack>
+    
+
+    </div>
+  </template>
+  
+  <script>
+    import router from "@system.router";
+    import {process} from "../../common/process"
+    export default {
+      private: {
+        min: "-",
+        max: "-",
+        ygap:4,
+        valueYs: ["9", "6", "3"],
+        lineData: [
+          {
+            strokeColor: "#FFC65B",
+            fillColor: "#cce5ff",
+            // 示例数据
+            data: [
+
+            ],
+            gradient: true,
+          },
+        ],
+        lineOpts: {
+          xAxis: {
+            min: 0,
+            max: 19, // 由于axisTick 数量是10 这里写9
+            display: false,
+            axisTick: 20,
+          },
+          yAxis: {
+            min: 0,
+            max: 100,
+            display: false,
+            axisTick: 11,
+          },
+          series: {
+            lineStyle: {
+              width: "2px",
+            },
+            loop: {
+              margin: "0", // 新绘制点与旧绘制点的间距
+            },
+          },
+        },
+        times: [],
+      },
+  
+      onInit() {
+
+
+        let exp=String(this.expression)
+        let fn= process(exp)
+        // console.info(fn(0.5))
+        const len=exp.split(":").length
+        var start=0
+        var end=1
+        var step=0.2
+        if(len==2){
+            start=parseFloat(exp.split(":")[1])
+            end=start+1
+            step=(end-start)/5
+        }
+        else if(len==3){
+            start=parseFloat(exp.split(":")[1])
+            end=parseFloat(exp.split(":")[2])
+            step=(end-start)/5
+        }
+        else if(len>=4){
+            start=parseFloat(exp.split(":")[1])
+            end=parseFloat(exp.split(":")[2])
+            step=parseFloat(exp.split(":")[3])
+        }
+        if (end<start) {
+          var s=end;
+          end=start;
+          start=s;
+
+        }else if(end==start){
+          end=start+1
+        }
+        if (step>=end-start){
+          step=(end-start)/5
+        }
+
+        console.info(start,end,step)
+        for (let i = start; i <= end; i += step) {
+            var y=Math.round(fn(i)*10)/10
+            console.info(y,i)
+            if (isNaN(y)|| y=== Infinity ||y=== -Infinity ){
+              y=Math.round(fn(i-1e-6)*10)/10
+              this.lineData[0].data.push(y);
+              y=Math.round(fn(i+1e-6)*10)/10
+              this.lineData[0].data.push(y);
+              this.times.push(Math.floor( (i-1e-6)*100)/100)
+              this.times.push(Math.floor( (i+1e-6)*100)/100)
+
+            }else{
+              this.lineData[0].data.push(y);
+              this.times.push(Math.round( i*100)/100)
+            }
+    
+
+        }
+        let arr = this.lineData[0].data;
+        console.info(arr)
+        this.lineData[0].data = arr.map((item) => item * 10);
+        this.lineOpts.xAxis.max=arr.length
+
+        // console.info(this.lineData[0].data,this.times)
+        var max = Math.max(...arr);
+        var min = Math.min(...arr);
+
+        if(len==5){
+          min=parseFloat(exp.split(":")[4])
+          max=min+1
+        }
+        if(len==6){
+          min=parseFloat(exp.split(":")[4])
+          max=parseFloat(exp.split(":")[5])
+        }
+        if (min>max){
+          var temp=min;
+          min=max;
+          max=temp;
+        }
+        if (min==max){
+            min-=1;
+            max+=1;
+        }
+
+        this.lineOpts.yAxis.max=max*10;
+        this.lineOpts.yAxis.min=min*10;
+
+        const gapValue=(max-min)/this.ygap
+        this.valueYs=[]
+        for(let i=0;i<=this.ygap;i++){
+            this.valueYs.push( Math.round((min+i*gapValue)*100)/100 )
+        }
+        this.valueYs.reverse()
+        console.info(this.valueYs,this.lineData[0].data)
+        
+
+      },
+  
+      back(event) {
+        if (event.direction == "right") {
+          router.back();
+        }
+      },
+  
+
+    };
+  </script>
+  
+  <style>
+    .blood-sugar-page {
+      flex-direction: column;
+      align-items: center;
+
+      display: flex;              /* 开启 flex 布局 */
+  flex-direction: column;     /* 垂直排列 */
+  justify-content: center;    /* 垂直居中 */
+  align-items: center;        /* 水平居中 */
+      /* border: 1px solid white;
+      border-radius: 233px; */
+    }
+    .chart-wrap {
+      width: 80%;
+    }
+    .title {
+      font-size: 30px;
+      text-align: center;
+      margin-top: 30px;
+    }
+  
+    .cur-time {
+      margin-top: 10px;
+      font-size: 25px;
+    }
+  
+    .stack-wrap {
+      position: relative;
+      width: 100%;
+    }
+    .background-wrap {
+      position: absolute;
+      bottom: 38px;
+      width: 100%;
+      flex-direction: column;
+      align-items: center;
+    }
+  
+    .line-item {
+      width: 80%;
+      margin-top: 48px;
+      align-items: center;
+      /* height: 23px; */
+      height: 60px; 
+      margin-left: 15px;
+    }
+  
+    .line {
+      height: 1px;
+      width: 100%;
+      border: 1px solid rgb(80, 80, 80);
+    }
+  
+    .line-num {
+      font-size: 20px;
+      margin-left: -30px;
+    }
+    .line-bottom {
+      height: 1px;
+      width: 80%;
+      border: 1px solid white;
+      margin-top: 60px;
+    }
+  
+    .top-wrap {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+  
+    .btn {
+      width: 100px;
+      height: 40px;
+      margin-top: 20px;
+      border-radius: 5px;
+      background-color: #09ba07;
+      font-size: 20px;
+      color: #ffffff;
+      margin-right: 40px;
+    }
+  
+    .btn-wrap {
+      justify-content: flex-end;
+      width: 100%;
+    }
+  
+    .time-wrap {
+      left: -30px;
+      width: 85%;
+  display: flex;              /* 横向排列 */
+  justify-content: space-between; /* 元素之间均匀分布 */
+  align-items: center;        /* 垂直居中（可选） */
+    }
+  
+    .times {
+      font-size: 20px;
+    }
+  
+    .footer {
+      margin-top: 30px;
+      width: 40%;
+      justify-content: space-around;
+    }
+  
+    .arrow-icon {
+      width: 30px;
+      height: 30px;
+    }
+  
+    .arrow-txt {
+      font-size: 25px;
+    }
+    .chart{
+      height: 500px;
+      /* width: 100px; */
+    }
+  </style>
